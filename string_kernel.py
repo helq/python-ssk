@@ -4,45 +4,43 @@ import numpy as np
 def ssk(s, t, n, lbda, accum=False):
     dynamic = {}
 
-    def k_prim(s, t, i):
+    def k_prim(sj, tk, i):
         # print( "k_prim({},{},{})".format(s, t, i) )
         if i == 0:
             # print( "k_prim({},{},{}) => 1".format(s, t, i)  )
             return 1.
-        if min(len(s), len(t)) < i:
+        if min(sj, tk) < i:
             # print( "k_prim({},{},{}) => 0".format(s, t, i)  )
             return 0.
-        if (s,t,i) in dynamic:
-            return dynamic[(s,t,i)]
+        if (sj,tk,i) in dynamic:
+            return dynamic[(sj,tk,i)]
 
-        x = s[-1]
-        s_ = s[:-1]
-        indices = [i for i, e in enumerate(t) if e == x]
-        toret = lbda * k_prim(s_, t, i) \
-              + sum( k_prim(s_, t[:j], i-1) * (lbda**(len(t)-j+1)) for j in indices )
+        x = s[sj-1]
+        indices = [i for i in range(tk) if t[i] == x]
+        toret = lbda * k_prim(sj-1, tk, i) \
+              + sum( k_prim(sj-1, k, i-1) * (lbda**(tk-k+1)) for k in indices )
         # print( "k_prim({},{},{}) => {}".format(s, t, i, toret) )
-        dynamic[(s,t,i)] = toret
+        dynamic[(sj,tk,i)] = toret
         return toret
 
-    def k(s, t, n):
+    def k(sj, tk, n):
         # print( "k({},{},{})".format(s, t, n) )
         if n <= 0:
             raise "Error, n must be bigger than zero"
-        if min(len(s), len(t)) < n:
+        if min(sj, tk) < n:
             # print( "k({},{},{}) => 0".format(s, t, n) )
             return 0.
-        x = s[-1]
-        s_ = s[:-1]
-        indices = [i for i, e in enumerate(t) if e == x]
-        toret = k(s_, t, n) \
-              + lbda**2 * sum( k_prim(s_, t[:j], n-1) for j in indices )
+        x = s[sj-1]
+        indices = [i for i in range(tk) if t[i] == x]
+        toret = k(sj-1, tk, n) \
+              + lbda**2 * sum( k_prim(sj-1, k, n-1) for k in indices )
         # print( "k({},{},{}) => {}".format(s, t, n, toret) )
         return toret
 
     if accum:
-        toret = sum( k(s, t, i) for i in range(1, min(n,len(s),len(t))+1) )
+        toret = sum( k(len(s), len(t), i) for i in range(1, min(n,len(s),len(t))+1) )
     else:
-        toret = k(s, t, n)
+        toret = k(len(s), len(t), n)
 
     # print( len(dynamic) )
     return toret
