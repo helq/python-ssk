@@ -1,11 +1,25 @@
 import numpy as np
+cimport numpy as np
+
+from cpython cimport array
+import array
+
+cimport cython
 
 # Kernel defined by Lodhi et al. (2002)
-def ssk(s, t, n, lbda, accum=False):
+@cython.boundscheck(False) # turn off bounds-checking for entire function
+@cython.wraparound(False)  # turn off negative index wrapping for entire function
+def ssk(str s_, str t_, int n, float lbda, accum=False):
+    cdef int lens, lent
+    cdef int i, sj, tk
+    cdef float toret
+    cdef char[:] s = array.array('B', [ord(c) for c in s_]) # this reduces the overhead 10x fold!!!
+    cdef char[:] t = array.array('B', [ord(c) for c in t_])
+
     lens, lent = len(s), len(t)
     #k_prim = (-1)*np.ones( (n+1, lens, lent) )
-    k_prim = np.zeros( (n, lens, lent) )
-    indices = { x : [i for i, e in enumerate(t) if e == x] for x in set(s) }
+    cdef np.ndarray[np.float64_t, ndim=3] \
+        k_prim = np.zeros( (n, lens, lent), dtype=np.float )
 
     k_prim[0,:,:] = 1
 
@@ -19,9 +33,9 @@ def ssk(s, t, n, lbda, accum=False):
                     toret *= lbda
                 k_prim[i,sj,tk] = toret + lbda * k_prim[i, sj-1, tk]
 
+    cdef int start = 0 if accum else n-1
+    cdef float k = 0.
 
-    start = 0 if accum else n-1
-    k = 0.
     for i in range(n):
         for sj in range(i,lens):
             for tk in range(i,lent):
@@ -35,31 +49,22 @@ def string_kernel(xs, ys, n, lbda):
     if len(xs.shape) != 2 or len(ys.shape) != 2 or xs.shape[1] != 1 or ys.shape[1] != 1:
         raise "The shape of the features is wrong, it must be (n,1)"
 
+    cdef int lenxs, lenys
+    cdef int i, j
+    cdef np.ndarray[np.float64_t, ndim=2] mat, mat_xs, mat_ys
     lenxs, lenys = xs.shape[0], ys.shape[0]
 
     mat = np.zeros( (lenxs, lenys) )
     for i in range(lenxs):
         for j in range(lenys):
-            mat[i,j] = ssk(xs[i,0], ys[j,0], n, lbda, accum=True)
+            mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
 
     mat_xs = np.zeros( (lenxs, 1) )
     mat_ys = np.zeros( (lenys, 1) )
 
     for i in range(lenxs):
-        mat_xs[i] = ssk(xs[i,0], xs[i,0], n, lbda, accum=True)
+        mat_xs[i] = ssk(str(xs[i,0]), str(xs[i,0]), n, lbda, accum=True)
     for j in range(lenys):
-        mat_ys[j] = ssk(ys[j,0], ys[j,0], n, lbda, accum=True)
+        mat_ys[j] = ssk(str(ys[j,0]), str(ys[j,0]), n, lbda, accum=True)
 
     return np.divide(mat, np.sqrt(mat_ys.T * mat_xs))
-
-if __name__ == '__main__':
-    print("Testing...")
-    lbda = .6
-    assert abs( ssk("cat", "cart", 4, lbda, accum=True) - (3*lbda**2 + lbda**4 + lbda**5 + 2*lbda**7) ) < 1e-6
-    assert ssk("science is organized knowledge", "wisdom is organized life", 4, 1, accum=True) == 20538.0
-
-    xs = np.array( ["cat", "car", "cart", "camp", "shard"] ).reshape( (5,1) )
-    ys = np.array( ["a", "cd"] ).reshape( (2,1) )
-    assert string_kernel(xs, xs, 2, 1.)[0,0] == 1.
-
-    print( string_kernel(xs, ys, 2, 1.) )
