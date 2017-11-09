@@ -2,26 +2,23 @@ import numpy as np
 
 # Kernel defined by Lodhi et al. (2002)
 def ssk(s, t, n, lbda, accum=False):
-    dynamic = {}
+    lens, lent = len(s), len(t)
+    #dynamic = (-1)*np.ones( (n+1, lens, lent) )
+    k_prim = np.zeros( (n, lens, lent) )
+    indices = { x : [i for i, e in enumerate(t) if e == x] for x in set(s) }
 
-    def k_prim(sj, tk, i):
-        # print( "k_prim({},{},{})".format(s, t, i) )
-        if i == 0:
-            # print( "k_prim({},{},{}) => 1".format(s, t, i)  )
-            return 1.
-        if min(sj, tk) < i:
-            # print( "k_prim({},{},{}) => 0".format(s, t, i)  )
-            return 0.
-        if (sj,tk,i) in dynamic:
-            return dynamic[(sj,tk,i)]
+    k_prim[0,:,:] = 1
 
-        x = s[sj-1]
-        indices = [i for i in range(tk) if t[i] == x]
-        toret = lbda * k_prim(sj-1, tk, i) \
-              + sum( k_prim(sj-1, k, i-1) * (lbda**(tk-k+1)) for k in indices )
-        # print( "k_prim({},{},{}) => {}".format(s, t, i, toret) )
-        dynamic[(sj,tk,i)] = toret
-        return toret
+    for i in range(1,n):
+        for sj in range(i,lens):
+            for tk in range(i,lent):
+                x = s[sj-1]
+                toret = lbda * k_prim[i, sj-1, tk]
+                for k_ in indices[x]:
+                    if k_ >= tk:
+                        break
+                    toret += k_prim[i-1, sj-1, k_] * (lbda**(tk-k_+1))
+                k_prim[i,sj,tk] = toret
 
     def k(sj, tk, n):
         # print( "k({},{},{})".format(s, t, n) )
@@ -31,18 +28,20 @@ def ssk(s, t, n, lbda, accum=False):
             # print( "k({},{},{}) => 0".format(s, t, n) )
             return 0.
         x = s[sj-1]
-        indices = [i for i in range(tk) if t[i] == x]
-        toret = k(sj-1, tk, n) \
-              + lbda**2 * sum( k_prim(sj-1, k, n-1) for k in indices )
+        toret = k(sj-1, tk, n)
+        for k_ in indices[x]:
+            if k_ >= tk:
+                break
+            toret += lbda**2 * k_prim[n-1, sj-1, k_]
         # print( "k({},{},{}) => {}".format(s, t, n, toret) )
         return toret
 
     if accum:
-        toret = sum( k(len(s), len(t), i) for i in range(1, min(n,len(s),len(t))+1) )
+        toret = sum( k(lens, lent, i) for i in range(1, min(n,lens,lent)+1) )
     else:
-        toret = k(len(s), len(t), n)
+        toret = k(lens, lent, n)
 
-    # print( len(dynamic) )
+    # print( [len(list(i for (sj,tk,i) in k_prim if i==m-1)) for m in range(n)] )
     return toret
 
 def string_kernel(xs, ys, n, lbda):
