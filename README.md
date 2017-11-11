@@ -33,6 +33,7 @@ my_ssk_kernel = lambda l, r: string_kernel(l, r, max_substring, lambda_decay)
 ## TODO ##
 
 [] Accept unicode characters not only ASCII
+
 [] Accept arbitrary lists not only python strings
 
 ## How does actually ssk() works? ##

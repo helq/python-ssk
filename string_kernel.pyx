@@ -55,16 +55,27 @@ def string_kernel(xs, ys, n, lbda):
     lenxs, lenys = xs.shape[0], ys.shape[0]
 
     mat = np.zeros( (lenxs, lenys) )
-    for i in range(lenxs):
+
+    # If both lists are equal, then the resulting matrix is symetric, there is no need to
+    # calculate the hole thing
+    if lenxs == lenys and np.array_equal(xs, ys):
+        for i in range(lenxs):
+            for j in range(i,lenys):
+                mat[j,i] = mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
+
+        mat_xs = mat_ys = mat.diagonal().reshape( (lenxs, 1) )
+
+    else:
+        for i in range(lenxs):
+            for j in range(lenys):
+                mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
+
+        mat_xs = np.zeros( (lenxs, 1) )
+        mat_ys = np.zeros( (lenys, 1) )
+
+        for i in range(lenxs):
+            mat_xs[i] = ssk(str(xs[i,0]), str(xs[i,0]), n, lbda, accum=True)
         for j in range(lenys):
-            mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
-
-    mat_xs = np.zeros( (lenxs, 1) )
-    mat_ys = np.zeros( (lenys, 1) )
-
-    for i in range(lenxs):
-        mat_xs[i] = ssk(str(xs[i,0]), str(xs[i,0]), n, lbda, accum=True)
-    for j in range(lenys):
-        mat_ys[j] = ssk(str(ys[j,0]), str(ys[j,0]), n, lbda, accum=True)
+            mat_ys[j] = ssk(str(ys[j,0]), str(ys[j,0]), n, lbda, accum=True)
 
     return np.divide(mat, np.sqrt(mat_ys.T * mat_xs))
