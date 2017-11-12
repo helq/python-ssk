@@ -14,5 +14,5 @@ if __name__ == '__main__':
     print( string_kernel(xs, ys, 2, 1.) )
     assert abs( string_kernel(xs, ys, 2, 1.)[0,0] - 0.40824829 ) < 1e-6
 
-    test = "the decision means a ruling could be made nearly two months before the regular season begins, time for the sides to work out a deal without delaying the season."
-    print( ssk(test, test, 30, .8) )
+    test = "This is a very long string, just to test how fast this implementation of ssk is. It should look like the computation tooks no time, unless you're running this in a potato pc"
+    print( ssk(test, test, 30, .8, accum=True) )
