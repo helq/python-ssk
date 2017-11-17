@@ -6,15 +6,23 @@ import array
 
 cimport cython
 
+def ssk(str s, str t, int n, float lbda, accum=False):
+    s_array = array.array('l', [ord(c) for c in s])
+    t_array = array.array('l', [ord(c) for c in t])
+    return ssk_array(s_array, t_array, n, lbda, accum)
+
 # Kernel defined by Lodhi et al. (2002)
 @cython.boundscheck(False) # turn off bounds-checking for entire function
 @cython.wraparound(False)  # turn off negative index wrapping for entire function
-def ssk(str s_, str t_, int n, float lbda, accum=False):
+def ssk_array(array.array s_, array.array t_, int n, float lbda, accum=False):
     cdef int lens, lent
     cdef int i, sj, tk
     cdef float toret
-    cdef char[:] s = array.array('B', [ord(c) for c in s_]) # this reduces the overhead 10x fold!!!
-    cdef char[:] t = array.array('B', [ord(c) for c in t_])
+    cdef long[:] s # this reduces the overhead 10x fold!!!
+    cdef long[:] t
+
+    s = s_ if s_.typecode == 'l' else array.array('l', [int(c) for c in s_])
+    t = t_ if t_.typecode == 'l' else array.array('l', [int(c) for c in t_])
 
     lens, lent = len(s), len(t)
     #k_prim = (-1)*np.ones( (n+1, lens, lent) )
