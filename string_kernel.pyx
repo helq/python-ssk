@@ -6,7 +6,8 @@ import array
 
 cimport cython
 
-def ssk(str s, str t, int n, float lbda, accum=False):
+def ssk(s, t, int n, float lbda, accum=False):
+    """s and t are strings, either numpy.str_ or python str, or a list of chars"""
     s_array = array.array('l', [ord(c) for c in s])
     t_array = array.array('l', [ord(c) for c in t])
     return ssk_array(s_array, t_array, n, lbda, accum)
@@ -54,6 +55,7 @@ def ssk_array(array.array s_, array.array t_, int n, float lbda, accum=False):
     return k
 
 def string_kernel(xs, ys, n, lbda):
+    """xs and ys are numpy arrays of strings or arrays of ints, n an integer and lbda a bool"""
     if len(xs.shape) != 2 or len(ys.shape) != 2 or xs.shape[1] != 1 or ys.shape[1] != 1:
         raise "The shape of the features is wrong, it must be (n,1)"
 
@@ -64,26 +66,28 @@ def string_kernel(xs, ys, n, lbda):
 
     mat = np.zeros( (lenxs, lenys) )
 
+    ssk_fun = ssk_array if xs.dtype == 'O' and isinstance(xs[0,0], array.array) else ssk
+
     # If both lists are equal, then the resulting matrix is symetric, there is no need to
     # calculate the hole thing
     if lenxs == lenys and np.array_equal(xs, ys):
         for i in range(lenxs):
             for j in range(i,lenys):
-                mat[j,i] = mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
+                mat[j,i] = mat[i,j] = ssk_fun(xs[i,0], ys[j,0], n, lbda, accum=True)
 
         mat_xs = mat_ys = mat.diagonal().reshape( (lenxs, 1) )
 
     else:
         for i in range(lenxs):
             for j in range(lenys):
-                mat[i,j] = ssk(str(xs[i,0]), str(ys[j,0]), n, lbda, accum=True)
+                mat[i,j] = ssk_fun(xs[i,0], ys[j,0], n, lbda, accum=True)
 
         mat_xs = np.zeros( (lenxs, 1) )
         mat_ys = np.zeros( (lenys, 1) )
 
         for i in range(lenxs):
-            mat_xs[i] = ssk(str(xs[i,0]), str(xs[i,0]), n, lbda, accum=True)
+            mat_xs[i] = ssk_fun(xs[i,0], xs[i,0], n, lbda, accum=True)
         for j in range(lenys):
-            mat_ys[j] = ssk(str(ys[j,0]), str(ys[j,0]), n, lbda, accum=True)
+            mat_ys[j] = ssk_fun(ys[j,0], ys[j,0], n, lbda, accum=True)
 
     return np.divide(mat, np.sqrt(mat_ys.T * mat_xs))

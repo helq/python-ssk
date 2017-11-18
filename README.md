@@ -32,7 +32,8 @@ my_ssk_kernel = lambda l, r: string_kernel(l, r, max_substring, lambda_decay)
 
 ## TODO ##
 
-* `string_kernel` should accept arbitrary lists not only python strings
+* `string_kernel` should accept arbitrary lists not only python strings, it accepts
+  arbitrary `array.array`'s objects, but no lists
 
 ## How does actually ssk() works? ##
 
