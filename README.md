@@ -25,15 +25,23 @@ A simple wrapper around `string_kernel()` to use this kernel in, for example, sc
 is easy, just:
 
 ```python
+def get_ssk_kernel_for_scikit(lambda_decay, max_substring):
+    def strker(il,ir):
+        #print("Shape of gramm matrix to create ({},{})".format(len(il), len(ir)))
+        l = np.array(il).reshape( (len(il), 1) )
+        r = np.array(ir).reshape( (len(ir), 1) )
+        return string_kernel(l,r,lambda_decay, max_substring)
+    return strker
+
 lambda_decay = .8
 max_substring = 5
-my_ssk_kernel = lambda l, r: string_kernel(l, r, max_substring, lambda_decay)
+
+my_ssk_kernel = get_ssk_kernel_for_scikit(lambda_decay, max_substring)
 ```
 
 ## TODO ##
 
-* `string_kernel` should accept arbitrary lists not only python strings, it accepts
-  arbitrary `array.array`'s objects, but no lists
+* `string_kernel` should accept arbitrary lists not only python strings and numpy arrays
 
 ## How does actually ssk() works? ##
 
