@@ -25,12 +25,15 @@ A simple wrapper around `string_kernel()` to use this kernel in, for example, sc
 is easy, just:
 
 ```python
-def get_ssk_kernel_for_scikit(lambda_decay, max_substring):
+def get_ssk_kernel_for_scikit(max_substring, lambda_decay):
     def strker(il,ir):
         #print("Shape of gramm matrix to create ({},{})".format(len(il), len(ir)))
+        # assuming that il and ir are lists of strings.
+        # len(il) may fail to give you the size real size if you're using np.arrays
+        # the idea is to reshape your data to be np.arrays of shapes (n,1) and (m,1)
         l = np.array(il).reshape( (len(il), 1) )
         r = np.array(ir).reshape( (len(ir), 1) )
-        return string_kernel(l,r,lambda_decay, max_substring)
+        return string_kernel(l, r, max_substring, lambda_decay)
     return strker
 
 lambda_decay = .8
