@@ -39,7 +39,7 @@ def get_ssk_kernel_for_scikit(max_substring, lambda_decay):
 lambda_decay = .8
 max_substring = 5
 
-my_ssk_kernel = get_ssk_kernel_for_scikit(lambda_decay, max_substring)
+my_ssk_kernel = get_ssk_kernel_for_scikit(max_substring, lambda_decay)
 ```
 
 ## TODO ##
