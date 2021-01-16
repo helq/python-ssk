@@ -28,7 +28,7 @@ def ssk_array(array.array s_, array.array t_, int n, float lbda, accum=False):
     lens, lent = len(s), len(t)
     #k_prim = (-1)*np.ones( (n+1, lens, lent) )
     cdef np.ndarray[np.float64_t, ndim=3] \
-        k_prim = np.zeros( (n, lens, lent), dtype=np.float )
+        k_prim = np.zeros((n, lens, lent), dtype=np.float)
 
     k_prim[0,:,:] = 1
 
@@ -64,7 +64,7 @@ def string_kernel(xs, ys, n, lbda):
     cdef np.ndarray[np.float64_t, ndim=2] mat, mat_xs, mat_ys
     lenxs, lenys = xs.shape[0], ys.shape[0]
 
-    mat = np.zeros( (lenxs, lenys) )
+    mat = np.zeros((lenxs, lenys))
 
     ssk_fun = ssk_array if xs.dtype == 'O' and isinstance(xs[0,0], array.array) else ssk
 
@@ -75,15 +75,15 @@ def string_kernel(xs, ys, n, lbda):
             for j in range(i,lenys):
                 mat[j,i] = mat[i,j] = ssk_fun(xs[i,0], ys[j,0], n, lbda, accum=True)
 
-        mat_xs = mat_ys = mat.diagonal().reshape( (lenxs, 1) )
+        mat_xs = mat_ys = mat.diagonal().reshape((lenxs, 1))
 
     else:
         for i in range(lenxs):
             for j in range(lenys):
                 mat[i,j] = ssk_fun(xs[i,0], ys[j,0], n, lbda, accum=True)
 
-        mat_xs = np.zeros( (lenxs, 1) )
-        mat_ys = np.zeros( (lenys, 1) )
+        mat_xs = np.zeros((lenxs, 1))
+        mat_ys = np.zeros((lenys, 1))
 
         for i in range(lenxs):
             mat_xs[i] = ssk_fun(xs[i,0], xs[i,0], n, lbda, accum=True)
